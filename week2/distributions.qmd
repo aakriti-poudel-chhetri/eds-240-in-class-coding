@@ -208,6 +208,9 @@ What should you carefully consider when checking the smoothing asumptions of you
 #| message: false
 
 #..................overlay histogram & density...................
+ggplot(mko_clean, aes(x = Temp_bot, y = after_stat(density))) + # scale down hist to match density curve
+  geom_histogram(fill = "gray", color = "black", alpha = 0.75) +
+  geom_density(linewidth = 1) 
 ```
 
 ## Ridgeline plots
@@ -249,6 +252,12 @@ mko_clean |>
 #| warning: false
 
 #...................boxplot with all 12 months...................
+ggplot(mko_clean, aes(x = month_name, y = Temp_bot, fill = month_name)) +
+  geom_boxplot() +
+  scale_x_discrete(limits = rev(month.name)) + # an alt way to reorder groups within ggplot, rather than during data wrangling
+  gghighlight::gghighlight(month_name == "October") +
+  coord_flip() +
+  theme(legend.position = "none")
 ```
 
 ::: {.callout-note}
@@ -279,11 +288,14 @@ ggplot(mko_clean, aes(x = month_name, y = Temp_bot)) +
 
 #........does not work if you have too many observations.........
 ggplot(mko_clean, aes(x = month_name, y = Temp_bot)) +
-  geom_boxplot() + 
-  scale_x_discrete(limits = rev(month.name)) + 
+  geom_boxplot(outlier.shape = NA) + # remember to remove outliers!
+  geom_jitter(alpha = 0.5, width = 0.2) +
+  scale_x_discrete(limits = rev(month.name)) + # an alt way to reorder groups within ggplot, rather than during data wrangling
   coord_flip()
-
 #...........but great when you have fewer observations...........
+ggplot(penguins, aes(x = species, y = body_mass_g)) +
+  geom_boxplot(outlier.shape = NA) + # remember to remove outliers!
+  geom_jitter(alpha = 0.5, width = 0.2) 
 
 ```
 
@@ -296,7 +308,8 @@ ggplot(mko_clean, aes(x = month_name, y = Temp_bot)) +
 
 #.......................boxplot + beeswarm.......................
 ggplot(penguins, aes(x = species, y = body_mass_g)) +
-  geom_boxplot(outlier.shape = NA)  
+  geom_boxplot(outlier.shape = NA) + # remember to remove outliers!
+  ggbeeswarm::geom_beeswarm(size = 1) 
 ```
 
 ### Dodge when you have an additional grouping variable
@@ -307,8 +320,11 @@ ggplot(penguins, aes(x = species, y = body_mass_g)) +
 #| warning: false
 
 #......................dodge groups by year......................
-ggplot(penguins, aes(x = species, y = body_mass_g)) +
-  geom_boxplot(outlier.shape = NA)
+#......................dodge groups by year......................
+ggplot(penguins, aes(x = species, y = body_mass_g, color = factor(year))) +
+  geom_boxplot(outlier.shape = NA) + # remember to remove outliers!
+  geom_point(alpha = 0.5, 
+             position = position_jitterdodge(jitter.width = 0.2))
 ```
 
 ## Violin plots
@@ -322,5 +338,10 @@ ggplot(penguins, aes(x = species, y = body_mass_g)) +
 #| warning: false
 
 #........................violin + box plot.......................
+ggplot(mko_clean, aes(x = month_name, y = Temp_bot)) +
+  geom_violin() +
+  geom_boxplot(width = 0.1, fill = "gray", color = "gray30", alpha = 0.5) +
+  scale_x_discrete(limits = rev(month.name)) + #rev function to reverse from Jan to Dec
+  coord_flip() #it can be done by changing the x and y axis also
 
 ```
