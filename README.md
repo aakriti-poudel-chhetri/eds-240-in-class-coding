@@ -1,6 +1,6 @@
 # EDS 240 In-Class Repository
 
-This repository hosts all the work completed by Aakriti Poudel during the in class sections of EDS 240 - *Data Visualization & Communication*.
+This repository hosts all the work completed by Aakriti Poudel during the in class sections of *EDS 240 - Data Visualization & Communication*.
 
 ## Course Information
 
