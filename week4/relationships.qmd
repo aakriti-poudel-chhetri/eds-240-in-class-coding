@@ -31,12 +31,13 @@ library(ggdensity)
 #...................download data from DataOne...................
 # you only need to do this once (then I recommend commenting it out)!
 metajam::download_d1_data("https://cn.dataone.org/cn/v2/resolve/https%3A%2F%2Fpasta.lternet.edu%2Fpackage%2Fdata%2Feml%2Fknb-lter-hbr%2F208%2F14%2F024b6acc5cb2e03a14fff5558bbffc0c",
-                 path = here::here("week4")) 
+                 path = here::here("data", "week4data")) 
 
 #  ~ NOTE: You should rename the downloaded folder to 'data/' so that it's automatically ignored by your repo's .gitignore! ~
 
 #....................read in downloaded files....................
-stream_chem_all <- metajam::read_d1_files(here::here("data", "week4data"))
+stream_chem_all <- metajam::read_d1_files(here::here("data", "week4data", "HubbardBrook-data")) #read_d1_files gives the path to the data folder
+
 
 #........................get the data file.......................
 stream_chem_data <- stream_chem_all$`HubbardBrook_weekly_stream_chemistry_1963-2025.csv`
