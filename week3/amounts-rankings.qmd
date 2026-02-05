@@ -1,5 +1,5 @@
 ---
-title: "TEMPLATE - visualizing amounts / rankings"
+title: "Visualizing amounts / Rankings"
 author: "Aakriti Poudel"
 date: 2026-01-21
 toc: true

@@ -1,5 +1,5 @@
 ---
-title: "TEMPLATE - visualizing distributions"
+title: "Visualizing distributions"
 author: "Aakriti Poudel"
 date: 2026-01-14
 toc: true

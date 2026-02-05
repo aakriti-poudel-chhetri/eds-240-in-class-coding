@@ -1,6 +1,6 @@
 ---
-title: "TEMPLATE - visualizing numerical relationships"
-author: "Your Name"
+title: "Visualizing numerical relationships"
+author: "Aakriti Poudel"
 date: 2026-01-28
 toc: true
 editor_options: 

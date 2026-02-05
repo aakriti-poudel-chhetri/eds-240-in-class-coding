@@ -1,5 +1,5 @@
 ---
-title: "TEMPLATE - `{ggplot2}` review"
+title: "`{ggplot2}` review"
 author: "Aakriti Poudel"
 date: 2026-01-07
 toc: true
