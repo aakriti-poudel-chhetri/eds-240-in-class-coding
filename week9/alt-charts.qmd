@@ -1,0 +1,263 @@
+---
+title: "Alternative chart types practice"
+author: "Aakriti Poudel"
+date: 2026-03-04
+toc: true
+---
+
+::: {.callout-note}
+This template accompanies the [alternative chart types practice slides](https://eds-240-data-viz.github.io/course-materials/lecture-slides/SLIDES-alt-charts.html#/title-slide){target="_blank}. Please be sure to cross-reference the slides, which contain important information and additional context!
+:::
+
+# Waffle Chart (Sasquatch sightings)
+
+- Typefaces used: Ultra & Josefin Sans
+- Colors used: "#357266", "#FFB813", "#983A06", "#005F71", "#757473", "#EFEFEF"
+
+```{r}
+#| eval: true
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-align: "center"
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#..........................load packages.........................
+library(tidyverse)
+library(waffle)
+library(showtext)
+
+#..........................import data...........................
+bigfoot <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-09-13/bigfoot.csv')
+```
+
+
+```{r}
+# ============================================================
+# Bigfoot Sightings Waffle Chart — California
+# Data: TidyTuesday 2022-09-13 | BFRO
+# ============================================================
+
+library(tidyverse)
+library(waffle)
+library(showtext)
+
+
+# ── 1. LOAD FONTS ────────────────────────────────────────────
+font_add_google("Lato", "lato")
+font_add_google("Playfair Display", "playfair")
+showtext_auto()
+
+
+# ── 2. READ DATA ─────────────────────────────────────────────
+bigfoot <- readr::read_csv(
+  "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-09-13/bigfoot.csv"
+)
+
+
+# ── 3. INSPECT ───────────────────────────────────────────────
+glimpse(bigfoot)
+# Key columns we'll use:
+#   state     — U.S. state of the sighting
+#   season    — reported season (Spring / Summer / Fall / Winter / Unknown)
+#   date      — date of sighting (character → needs parsing if used)
+
+
+# ── 4. DATA CLEANING & WRANGLING ─────────────────────────────
+
+bf_clean <- bigfoot |>
+
+  # 4a. Keep only California sightings
+  filter(state == "California") |>
+
+  # 4b. Drop rows with missing or "Unknown" season
+  filter(!is.na(season), season != "Unknown") |>
+
+  # 4c. Enforce factor order (Spring → Summer → Fall → Winter)
+  mutate(
+    season = factor(
+      season,
+      levels = c("Spring", "Summer", "Fall", "Winter")
+    )
+  ) |>
+
+  # 4d. Select only the columns we need
+  select(season, state, date, latitude, longitude)
+
+# Quick sanity check
+bf_clean |>
+  count(season, name = "n_sightings") |>
+  mutate(pct = round(n_sightings / sum(n_sightings) * 100, 1))
+
+
+# ── 5. SUMMARISE → NAMED VECTOR FOR waffle() ─────────────────
+# waffle() expects a named numeric vector; each unit = 1 square
+
+season_counts <- bf_clean |>
+  count(season) |>
+  deframe()                    # tibble col1 → names, col2 → values
+
+# Result looks like:
+#  Spring Summer   Fall Winter
+#      81    134     93     28
+
+# Scale down if total is large (each square = k sightings)
+# Here total ≈ 336; keep 1 square = 1 sighting for fidelity
+# Uncomment below to use 1 square = 5 sightings:
+# season_counts <- round(season_counts / 5)
+
+
+# ── 6. COLOUR PALETTE ────────────────────────────────────────
+season_colors <- c(
+  Spring = "#2d6a4f",   # forest green
+  Summer = "#f4a61d",   # golden yellow
+  Fall   = "#7b3a10",   # burnt sienna
+  Winter = "#2176ae"    # steel blue
+)
+
+
+# ── 7. PLOT ───────────────────────────────────────────────────
+BG <- "#ffffff" 
+
+p <- waffle(
+  parts      = season_counts,
+  rows       = 17,                # number of rows in the grid
+  colors     = season_colors,
+  size       = 0.4,               # line size between squares (tile border width)
+  flip       = FALSE,
+  legend_pos = "bottom"
+) +
+
+  # This controls the gap color between squares
+  scale_color_manual(values = rep(BG, length(season_counts)), guide = "none") +
+
+  # Remove the default ggplot padding around the data range.
+  # Without this, ggplot adds ~5% whitespace beyond the last tile on each axis,
+  # which shows up as a white/off-color strip at the panel edges.
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+
+  labs(
+    title    = "Summer is the season of Bigfoot sightings in CA",
+    subtitle = "Winter, on the other hand, is a rare time to spot Sasquatch",
+    caption  = "Source: Bigfoot Field Researchers Organization (BFRO)"
+  ) +
+
+  theme_minimal(base_family = "lato") +
+
+  theme(
+    # Titles
+    plot.title    = element_text(
+      family    = "playfair",
+      face      = "bold",
+      size      = 16,
+      color     = "#1a1a2e",
+      margin    = margin(b = 4)
+    ),
+    plot.subtitle = element_text(
+      family = "lato",
+      size   = 11,
+      color  = "#444444",
+      margin = margin(b = 12)
+    ),
+    plot.caption  = element_text(
+      size   = 8,
+      color  = "#888888",
+      hjust  = 1,
+      margin = margin(t = 10)
+    ),
+
+    # Legend
+    legend.position  = "bottom",
+    legend.title     = element_blank(),
+    legend.text      = element_text(size = 10, family = "lato"),
+    legend.key.size  = unit(12, "pt"),
+    legend.spacing.x = unit(8, "pt"),
+
+    # Background
+    # NOTE: waffle uses geom_tile internally, so panel.background alone
+    # has no effect. Use theme_enhance_waffle() below to strip the default
+    # panel, then set plot.background to fill the entire canvas.
+    plot.background  = element_rect(fill = BG, color = NA),
+    panel.background = element_rect(fill = BG, color = NA),
+    panel.border     = element_blank(),
+    panel.grid       = element_blank(),
+    axis.text        = element_blank(),
+    axis.ticks       = element_blank(),
+
+    # Margins
+    plot.margin = margin(20, 24, 14, 24)
+  )
+
+# theme_enhance_waffle() removes the internal grey panel that waffle draws
+# by default — must come AFTER your theme() call or it gets overridden
+p <- p + theme_enhance_waffle()
+
+print(p)
+
+
+# ── 8. SAVE ───────────────────────────────────────────────────
+ggsave(
+  filename = "bigfoot_waffle_CA.png",
+  plot     = p,
+  width    = 8,
+  height   = 5.5,
+  dpi      = 300,
+  bg       = BG
+)
+message("✓ Plot saved → bigfoot_waffle_CA.png")
+```
+
+
+# Bump chart (highest paying occupations)
+
+- Typefaces used: Passion One & Oxygen
+- Colors used: `viridisLite::magma()` & "#2A114E", "#6D6B71", "#FFF8F4"
+
+```{r}
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#..........................load packages.........................
+library(tidyverse)
+library(ggbump)
+library(ggtext)
+library(showtext)
+
+#..........................import data...........................
+jobs <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+```
+
+# Stream graph (energy production)
+
+- Typefaces used: Exo 2 & Open Sans
+- Colors used: `paletteer::paletteer_d("MetBrewer::Archambault", n = 7)`
+
+```{r}
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#..........................load packages.........................
+library(tidyverse)
+library(ggstream)
+library(ggtext)
+library(showtext)
+
+#..........................import data...........................
+capacity <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2022/2022-05-03/capacity.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
